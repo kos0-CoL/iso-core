@@ -40,7 +40,7 @@ jobs:
           tagName: v0.1.0
           releaseName: "ISO CORE v0.1.0"
           releaseBody: "Instalador ejecutable de Windows generado automáticamente."
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
 
