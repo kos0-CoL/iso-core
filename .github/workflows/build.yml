@@ -1,0 +1,45 @@
+name: "Publish Desktop App"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "windows-latest" # Computadora de Windows en la nube
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install frontend dependencies
+        run: npm install
+
+      - name: build and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v0.1.0
+          releaseName: "ISO CORE v0.1.0"
+          releaseBody: "Instalador ejecutable de Windows generado automáticamente."
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
