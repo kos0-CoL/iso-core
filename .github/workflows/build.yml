@@ -9,7 +9,7 @@ jobs:
   publish-tauri:
     permissions:
       contents: write
-      pull-requests: write|
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
