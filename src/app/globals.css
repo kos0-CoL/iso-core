@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 18% 11%;
+    --foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --accent: 188 86% 37%;
+    --radius: 0.5rem;
+  }
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground antialiased selection:bg-accent/30 selection:text-white;
+  font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+}
+
+/* Custom Scrollbar for Scientific Lab look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full hover:bg-muted-foreground transition-colors;
+}
+
+/* Isometric Canvas Smoothness */
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Animations */
+@keyframes pulse-accent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pulse-accent {
+  animation: pulse-accent 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

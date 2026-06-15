@@ -1,0 +1,16 @@
+{
+  "placeholderImages": [
+    {
+      "id": "grass-tile",
+      "description": "Seamless isometric dark green grass texture",
+      "imageUrl": "https://picsum.photos/seed/grass1/256/256",
+      "imageHint": "isometric grass"
+    },
+    {
+      "id": "iso-core-spritesheet",
+      "description": "Official ISO CORE Spritesheet 1536x1024",
+      "imageUrl": "https://picsum.photos/seed/isocore-atlas/1536/1024",
+      "imageHint": "rpg spritesheet"
+    }
+  ]
+}

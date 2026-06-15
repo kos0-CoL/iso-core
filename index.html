@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Juego con Biblia Neuronal</title>
+    <style>
+        canvas { border: 1px solid black; background: #aad4aa; }
+        .info { font-family: monospace; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <canvas id="juego" width="800" height="500"></canvas>
+    <div class="info">
+        <p>🧠 El aldeano decide usando la Biblia Neuronal</p>
+        <p id="estado">Cargando...</p>
+    </div>
+    <script src="brain.js"></script>
+    <script>
+        // --------------------------------------------------------------
+        // 1. DEFINIR LOS PESOS DEL CEREBRO (LEÑADOR, solo dos acciones)
+        // --------------------------------------------------------------
+        const pesos = {
+            lenador: {
+                talar: {
+                    // Orden de los pesos: X1 a X17
+                    weights: [0, -0.2, 0, 0, 0, 0, 0, 0, 0, 0, 0.9, 0, 0, 0.7, 0, 0, 0],
+                    bias: 0.8
+                },
+                huir: {
+                    weights: [0.6, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.6, -0.8],
+                    bias: -0.2
+                }
+            }
+        };
+
+        // Función sigmoide
+        function sigmoid(z) {
+            return 1 / (1 + Math.exp(-z));
+        }
+
+        // Función que elige la acción según los inputs
+        function calcularAccion(tipo, inputs) {
+            const cerebro = pesos[tipo];
+            let mejorAccion = null;
+            let mejorSalida = -Infinity;
+            for (let [nombre, params] of Object.entries(cerebro)) {
+                let suma = params.bias;
+                for (let i = 0; i < 17; i++) {
+                    suma += params.weights[i] * inputs[i];
+                }
+                let salida = sigmoid(suma);
+                if (salida > mejorSalida) {
+                    mejorSalida = salida;
+                    mejorAccion = nombre;
+                }
+            }
+            return mejorAccion;
+        }
+
+        // --------------------------------------------------------------
+        // 2. ELEMENTOS DEL JUEGO
+        // --------------------------------------------------------------
+        const canvas = document.getElementById('juego');
+        const ctx = canvas.getContext('2d');
+
+        // Aldeano
+        let aldeano = {
+            tipo: 'lenador',
+            x: 100, y: 250,
+            inputs: new Array(17).fill(0),
+            miedoResidual: 0
+        };
+
+        // Lobo (peligro)
+        let lobo = { x: 600, y: 250 };
+
+        // --------------------------------------------------------------
+        // 3. FUNCIÓN QUE ACTUALIZA LOS INPUTS (X1 a X17) según el mundo
+        // --------------------------------------------------------------
+        function actualizarInputs() {
+            // X1 = peligro por cercanía al lobo (normalizado)
+            let dx = aldeano.x - lobo.x;
+            let dy = aldeano.y - lobo.y;
+            let distancia = Math.hypot(dx, dy);
+            let peligro = 1 - Math.min(1, distancia / 200);
+            aldeano.inputs[0] = peligro;
+
+            // X2 a X15 simplificados (para que funcione el ejemplo)
+            for (let i = 1; i <= 14; i++) aldeano.inputs[i] = 0;
+            aldeano.inputs[10] = 0.8; // X11: madera disponible
+            aldeano.inputs[13] = 0.5; // X14: almacén
+
+            // X16 = miedo residual
+            if (peligro > 0) {
+                aldeano.miedoResidual = peligro;
+            } else {
+                aldeano.miedoResidual = Math.max(0, aldeano.miedoResidual - 0.05);
+            }
+            aldeano.inputs[15] = aldeano.miedoResidual;
+
+            // X17 = compañía cercana (valor fijo para que no esté solo)
+            aldeano.inputs[16] = 0.6;
+        }
+
+        // --------------------------------------------------------------
+        // 4. FUNCIÓN QUE EJECUTA LA ACCIÓN (mover al aldeano)
+        // --------------------------------------------------------------
+        function ejecutarAccion(accion) {
+            if (accion === 'talar') {
+                // Se mueve a la derecha (busca madera)
+                aldeano.x += 3;
+                // Si se pasa del borde, vuelve
+                if (aldeano.x > canvas.width) aldeano.x = 0;
+            } else if (accion === 'huir') {
+                // Se aleja del lobo
+                let dx = aldeano.x - lobo.x;
+                let dy = aldeano.y - lobo.y;
+                let angulo = Math.atan2(dy, dx);
+                aldeano.x += Math.cos(angulo) * 4;
+                aldeano.y += Math.sin(angulo) * 4;
+                // Que no se salga
+                aldeano.x = Math.min(Math.max(aldeano.x, 0), canvas.width);
+                aldeano.y = Math.min(Math.max(aldeano.y, 0), canvas.height);
+            }
+        }
+
+        // --------------------------------------------------------------
+        // 5. MOVIMIENTO DEL LOBO (aleatorio)
+        // --------------------------------------------------------------
+        function moverLobo() {
+            lobo.x += (Math.random() - 0.5) * 6;
+            lobo.y += (Math.random() - 0.5) * 6;
+            lobo.x = Math.min(Math.max(lobo.x, 0), canvas.width);
+            lobo.y = Math.min(Math.max(lobo.y, 0), canvas.height);
+        }
+
+        // --------------------------------------------------------------
+        // 6. DIBUJAR EN PANTALLA
+        // --------------------------------------------------------------
+        function dibujar() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Dibujar lobo
+            ctx.fillStyle = '#a55';
+            ctx.beginPath();
+            ctx.arc(lobo.x, lobo.y, 18, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.fillText('🐺', lobo.x-10, lobo.y-10);
+            // Dibujar aldeano
+            ctx.fillStyle = '#4a6';
+            ctx.beginPath();
+            ctx.arc(aldeano.x, aldeano.y, 15, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.fillText('🪓', aldeano.x-8, aldeano.y-10);
+            // Mostrar información
+            document.getElementById('estado').innerHTML = `
+                Acción: <strong>${ultimaAccion}</strong> | 
+                Peligro (X1): ${aldeano.inputs[0].toFixed(2)} | 
+                Miedo residual (X16): ${aldeano.inputs[15].toFixed(2)}
+            `;
+        }
+
+        // --------------------------------------------------------------
+        // 7. BUCLE PRINCIPAL DEL JUEGO (aquí está la línea que buscas)
+        // --------------------------------------------------------------
+        let ultimaAccion = '';
+        function bucleJuego() {
+            // Mover al lobo
+            moverLobo();
+            
+            // 1. Actualizar los inputs del aldeano según el mundo
+            actualizarInputs();
+            
+            // 2. 🧠 LLAMAR AL CEREBRO para elegir acción (¡ESTA ES LA LÍNEA!)
+            const accion = calcularAccion(aldeano.tipo, aldeano.inputs);
+            ultimaAccion = accion;
+            
+            // 3. Ejecutar la acción (mover al aldeano según lo que decidió el cerebro)
+            ejecutarAccion(accion);
+            
+            // Dibujar todo
+            dibujar();
+            
+            // Repetir el bucle 60 veces por segundo
+            requestAnimationFrame(bucleJuego);
+        }
+
+        // Iniciar el juego
+        bucleJuego();
+    </script>
+</body>
+</html>
