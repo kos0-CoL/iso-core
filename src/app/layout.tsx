@@ -28,7 +28,7 @@ export default function RootLayout({
         <title>ISO CORE: Vector Lab</title>
         <meta name="description" content="Multi-agent vector ecosystem for behavioral emergence research." />
       </head>
-      <body className="font-body antialiased bg-background text-foreground overflow-hidden">
+      <body className="font-body antialiased bg-background text-foreground overflow-auto">
         {children}
       </body>
     </html>

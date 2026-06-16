@@ -455,7 +455,7 @@ export const SimulationController: React.FC<{ initialSettings: SimulationSetting
   if (!state) return null;
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden relative">
+    <div className="flex h-screen w-full bg-background overflow-auto relative">
       <aside className="w-80 border-r border-border relative z-20">
         <StatsPanel 
           state={state} 
