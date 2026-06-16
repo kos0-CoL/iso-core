@@ -10,6 +10,8 @@ import { DivineTerminal } from './DivineTerminal';
 import { HistoryPanel } from './HistoryPanel';
 import { useToast } from "@/hooks/use-toast";
 import { audioManager } from '@/lib/audio-manager';
+// 🔧 Importar la ventana de Tauri para escuchar eventos de redimensionado
+import { appWindow } from '@tauri-apps/api/window';
 
 export const SimulationController: React.FC<{ initialSettings: SimulationSettings; onExit: () => void }> = ({ initialSettings, onExit }) => {
   const [state, setState] = useState<SimulationState | null>(null);
@@ -20,6 +22,31 @@ export const SimulationController: React.FC<{ initialSettings: SimulationSetting
 
   const agentExplorationTargets = useRef<Record<string, { x: number, y: number }>>({});
   const threatTargets = useRef<Record<string, { x: number, y: number }>>({});
+
+  // 🔧 Estado para forzar un re-render cuando sea necesario
+  const [, forceUpdate] = useState(0);
+
+  // 🔧 Efecto para corregir el layout inicial y responder a cambios de tamaño
+  useEffect(() => {
+    // Forzar un reflow después de que la ventana esté completamente cargada/maximizada
+    const timeout = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+      forceUpdate(n => n + 1);
+    }, 150);
+
+    // Escuchar cambios de tamaño de la ventana de Tauri (cuando el usuario maximiza o redimensiona)
+    let unlistenResize: (() => void) | undefined;
+    appWindow.onResized().then(unlisten => {
+      unlistenResize = unlisten;
+      window.dispatchEvent(new Event('resize'));
+      forceUpdate(n => n + 1);
+    });
+
+    return () => {
+      clearTimeout(timeout);
+      if (unlistenResize) unlistenResize();
+    };
+  }, []);
 
   useEffect(() => {
     const initialState = createInitialState(initialSettings);
