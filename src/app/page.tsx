@@ -82,7 +82,7 @@ export default function Home() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <main className="min-h-screen bg-background flex items-center justify-center p-6 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background overflow-hidden">
+      <main className="min-h-screen bg-background flex items-center justify-center p-6 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background overflow-auto">
         <div className="max-w-4xl w-full space-y-8 animate-in fade-in zoom-in duration-700">
           <div className="text-center space-y-4">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-primary/10 text-primary mb-4 border border-primary/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]">

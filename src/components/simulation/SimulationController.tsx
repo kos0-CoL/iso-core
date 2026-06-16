@@ -10,8 +10,6 @@ import { DivineTerminal } from './DivineTerminal';
 import { HistoryPanel } from './HistoryPanel';
 import { useToast } from "@/hooks/use-toast";
 import { audioManager } from '@/lib/audio-manager';
-// 🔧 Importar la ventana de Tauri para escuchar eventos de redimensionado
-import { appWindow } from '@tauri-apps/api/window';
 
 export const SimulationController: React.FC<{ initialSettings: SimulationSettings; onExit: () => void }> = ({ initialSettings, onExit }) => {
   const [state, setState] = useState<SimulationState | null>(null);
@@ -23,28 +21,16 @@ export const SimulationController: React.FC<{ initialSettings: SimulationSetting
   const agentExplorationTargets = useRef<Record<string, { x: number, y: number }>>({});
   const threatTargets = useRef<Record<string, { x: number, y: number }>>({});
 
-  // 🔧 Estado para forzar un re-render cuando sea necesario
-  const [, forceUpdate] = useState(0);
-
-  // 🔧 Efecto para corregir el layout inicial y responder a cambios de tamaño
+  // 🔧 Fuerza un reflow después del montaje y cuando cambie el tamaño de la ventana
   useEffect(() => {
-    // Forzar un reflow después de que la ventana esté completamente cargada/maximizada
     const timeout = setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
-      forceUpdate(n => n + 1);
-    }, 150);
-
-    // Escuchar cambios de tamaño de la ventana de Tauri (cuando el usuario maximiza o redimensiona)
-    let unlistenResize: (() => void) | undefined;
-    appWindow.onResized().then(unlisten => {
-      unlistenResize = unlisten;
-      window.dispatchEvent(new Event('resize'));
-      forceUpdate(n => n + 1);
-    });
-
+    }, 100);
+    const handleResize = () => window.dispatchEvent(new Event('resize'));
+    window.addEventListener('resize', handleResize);
     return () => {
       clearTimeout(timeout);
-      if (unlistenResize) unlistenResize();
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -53,40 +39,6 @@ export const SimulationController: React.FC<{ initialSettings: SimulationSetting
     setState({ ...initialState, time: 0 });
     audioManager.startAmbient();
   }, [initialSettings]);
-
-  useEffect(() => {
-    if (state) {
-      audioManager.updateAmbientTheme(state.luz);
-    }
-  }, [state?.luz]);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setState(prev => {
-          if (!prev) return null;
-          const newPaused = !prev.paused;
-          if (newPaused) {
-            setHistoryTab("DIARIO");
-            audioManager.playUi('menu_open');
-          } else {
-            setHistoryTab(null);
-            audioManager.playUi('menu_close');
-          }
-          return { ...prev, paused: newPaused };
-        });
-      }
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, []);
-
-  useEffect(() => {
-    if (selectedEntity) {
-      audioManager.playUi('select');
-      audioManager.resumeAmbient();
-    }
-  }, [selectedEntity]);
 
   const updateSimulation = useCallback(() => {
     setState(prev => {
